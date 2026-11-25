@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>UCC Hostel Finder • 500 Verified Student Hostels (≤ 10 Mins Walk)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      box-sizing: border-box;
+    }
+    html, body {
+      overscroll-behavior-y: none;
+      background-color: #f8fafc;
+      color: #0f172a;
+      margin: 0;
+      padding: 0;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .map-grid {
+      background-color: #eef4f1;
+      background-image:
+        radial-gradient(#cbd5e1 1px, transparent 1px),
+        linear-gradient(to right, rgba(148, 163, 184, 0.14) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(148, 163, 184, 0.14) 1px, transparent 1px);
+      background-size: 24px 24px, 72px 72px, 72px 72px;
+    }
+    .pin-pulse {
+      animation: pulseRing 2s infinite;
+    }
+    @keyframes pulseRing {
+      0% { box-shadow: 0 0 0 0 rgba(15, 118, 110, 0.45); }
+      70% { box-shadow: 0 0 0 10px rgba(15, 118, 110, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(15, 118, 110, 0); }
+    }
+    .sheet-shadow {
+      box-shadow: 0 -8px 28px -6px rgba(15, 23, 42, 0.14);
+    }
+  </style>
+</head>
+<body class="h-screen w-screen overflow-hidden flex flex-col select-none">
+
+  <!-- TOP NAVY HEADER -->
+  <header class="bg-[#081b2e] text-white px-3.5 pt-2.5 pb-3 z-30 shadow-md shrink-0">
+    <div class="max-w-3xl mx-auto">
+      <div class="flex items-center justify-between gap-2 mb-2.5">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-teal-400 to-sky-500 flex items-center justify-center shadow-inner shrink-0">
+            <svg class="w-5 h-5 text-slate-950" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+            </svg>
+          </div>
+          <div class="min-w-0">
+            <div class="flex items-center gap-1.5">
+              <h1 class="font-extrabold text-base tracking-tight truncate">UCC Hostel Finder</h1>
+              <span class="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-teal-500/20 text-teal-300 border border-teal-400/30">≤ 10m Walk</span>
+            </div>
+            <p class="text-[11px] text-slate-300 truncate">500 Verified Hostels • 0 Agent Fees</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-1.5 shrink-0">
+          <button onclick="resetFilters()" class="px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 active:scale-95 text-xs font-semibold flex items-center gap-1 transition">
+            <svg class="w-3.5 h-3.5 text-teal-300" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+            </svg>
+            <span class="hidden sm:inline">Reset</span>
+          </button>
+
+          <button onclick="openSavedDrawer()" class="px-2.5 py-1.5 rounded-lg bg-teal-500 hover:bg-teal-400 active:scale-95 text-slate-950 text-xs font-extrabold flex items-center gap-1.5 shadow transition">
+            <span>Saved</span>
+            <span id="savedBadge" class="px-1.5 py-0.2 rounded-full bg-slate-950 text-teal-300 text-[11px] font-black">0</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- SEARCH BAR -->
+      <div class="relative mb-2">
+        <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m1.85-5.15a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        <input
+          id="searchInput"
+          type="text"
+          oninput="applyFilters()"
+          placeholder="Search UCC Hostel Finder • 500 hostels, Ayensu Plaza..."
+          class="w-full pl-9 pr-9 py-2 rounded-full bg-white text-slate-900 placeholder-slate-400 text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-teal-400 shadow-inner"
+        />
+        <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 text-xs font-bold px-1">✕</button>
+      </div>
+
+      <!-- AREA CHIPS -->
+      <div id="areaChips" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5"></div>
+    </div>
+  </header>
+
+  <!-- MAIN WORKSPACE: MAP + DRAGGABLE BOTTOM SHEET -->
+  <main id="workspace" class="flex-1 relative flex flex-col overflow-hidden max-w-3xl w-full mx-auto bg-white shadow-xl">
+
+    <!-- INTERACTIVE CAMPUS MAP PANEL -->
+    <section id="mapPanel" class="relative w-full overflow-hidden map-grid transition-[height] duration-150 ease-out" style="height: 44%;">
+      <!-- Zoom & Recenter Controls -->
+      <div class="absolute right-3 bottom-4 z-20 flex flex-col gap-1.5">
+        <button onclick="recenterMap()" title="Center Campus" class="w-9 h-9 rounded-xl bg-white/95 hover:bg-white shadow-md border border-slate-200 flex items-center justify-center text-slate-700 active:scale-95">
+          <svg class="w-4 h-4 text-teal-600" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v3m0 12v3m9-9h-3M6 12H3m15.364 6.364l-2.121-2.121M7.757 7.757L5.636 5.636m12.728 0l-2.121 2.121M7.757 16.243l-2.121 2.121" />
+          </svg>
+        </button>
+        <div class="flex flex-col rounded-xl bg-white/95 shadow-md border border-slate-200 overflow-hidden">
+          <button onclick="zoomMap(0.2)" class="w-9 h-8 hover:bg-slate-50 active:bg-slate-100 font-extrabold text-base text-slate-800 border-b border-slate-200">+</button>
+          <button onclick="zoomMap(-0.2)" class="w-9 h-8 hover:bg-slate-50 active:bg-slate-100 font-extrabold text-base text-slate-800">−</button>
+        </div>
+      </div>
+
+      <!-- Map Walk Legend -->
+      <div class="absolute left-3 top-2.5 z-20 bg-white/90 backdrop-blur-sm border border-slate-200/80 rounded-lg px-2.5 py-1 shadow-sm pointer-events-none">
+        <div class="text-[10px] font-bold text-slate-700">Walking Times to Lecture Halls</div>
+        <div class="text-[9.5px] text-slate-500">Ayensu 3–5m • Kwaprow 3m • Amamoma/Science 5m • Sch Bus Rd 7m • Old Site 10m</div>
+      </div>
+
+      <!-- Pannable / Zoomable Campus Canvas -->
+      <div id="mapViewport" class="w-full h-full cursor-grab active:cursor-grabbing relative overflow-hidden">
+        <div id="mapCanvas" class="absolute origin-center" style="width: 760px; height: 540px; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(1);">
+          <!-- Stylized UCC Campus Roads, Zones & Landmarks -->
+          <svg viewBox="0 0 760 540" class="w-full h-full pointer-events-none">
+            <!-- Green Campus Zones -->
+            <ellipse cx="430" cy="145" rx="150" ry="82" fill="#bbf7d0" fill-opacity="0.55" stroke="#86efac" stroke-width="1.5" />
+            <ellipse cx="565" cy="405" rx="125" ry="78" fill="#bbf7d0" fill-opacity="0.55" stroke="#86efac" stroke-width="1.5" />
+            <ellipse cx="165" cy="365" rx="125" ry="88" fill="#dbeafe" fill-opacity="0.45" stroke="#93c5fd" stroke-width="1.2" stroke-dasharray="4 4" />
+            <ellipse cx="145" cy="145" rx="115" ry="75" fill="#fef3c7" fill-opacity="0.45" stroke="#fcd34d" stroke-width="1.2" stroke-dasharray="4 4" />
+            <ellipse cx="625" cy="165" rx="95" ry="72" fill="#e0e7ff" fill-opacity="0.45" stroke="#a5b4fc" stroke-width="1.2" stroke-dasharray="4 4" />
+
+            <!-- Main Cape Coast - Takoradi Highway & Campus Arterials -->
+            <path d="M 10 265 Q 380 250 750 272" stroke="#f59e0b" stroke-width="7" fill="none" stroke-linecap="round" />
+            <path d="M 10 265 Q 380 250 750 272" stroke="#fef3c7" stroke-width="1.5" stroke-dasharray="8 6" fill="none" />
+
+            <!-- Shuttle / Science / Old Site Connecting Roads -->
+            <path d="M 355 260 L 405 220 L 485 142 L 625 165" stroke="#ffffff" stroke-width="5" fill="none" stroke-linecap="round" />
+            <path d="M 355 260 L 450 340 L 565 405" stroke="#ffffff" stroke-width="5" fill="none" stroke-linecap="round" />
+            <path d="M 355 260 L 220 335 L 140 410" stroke="#ffffff" stroke-width="4.5" fill="none" stroke-linecap="round" />
+            <path d="M 330 258 L 230 185 L 145 140" stroke="#ffffff" stroke-width="4.5" fill="none" stroke-linecap="round" />
+
+            <!-- Zone Titles -->
+            <text x="430" y="96" text-anchor="middle" fill="#15803d" font-size="12" font-weight="800" letter-spacing="1">UCC NEW SITE • SCIENCE</text>
+            <text x="565" y="465" text-anchor="middle" fill="#15803d" font-size="12" font-weight="800" letter-spacing="1">UCC OLD SITE</text>
+            <text x="145" y="92" text-anchor="middle" fill="#b45309" font-size="11" font-weight="800">AMAMOMA (5m)</text>
+            <text x="165" y="445" text-anchor="middle" fill="#1d4ed8" font-size="11" font-weight="800">AYENSU (3m–5m)</text>
+            <text x="635" y="108" text-anchor="middle" fill="#4338ca" font-size="11" font-weight="800">KWAPROW (3m)</text>
+          </svg>
+
+          <!-- Campus Landmark Badges -->
+          <div class="absolute left-[315px] top-[252px] px-2 py-0.5 rounded bg-slate-900 text-white text-[9.5px] font-bold shadow pointer-events-none">● UCC Main Gate</div>
+          <div class="absolute left-[265px] top-[198px] px-2 py-0.5 rounded bg-slate-800 text-teal-200 text-[9.5px] font-bold shadow pointer-events-none">● Sam Jonah Library</div>
+          <div class="absolute left-[465px] top-[128px] px-2 py-0.5 rounded bg-emerald-900 text-emerald-100 text-[9.5px] font-bold shadow pointer-events-none">● Science Complex</div>
+          <div class="absolute left-[382px] top-[214px] px-2 py-0.5 rounded bg-amber-900 text-amber-100 text-[9.5px] font-bold shadow pointer-events-none">● Sch Bus Road (7m)</div>
+          <div class="absolute left-[515px] top-[395px] px-2 py-0.5 rounded bg-emerald-900 text-emerald-100 text-[9.5px] font-bold shadow pointer-events-none">● Casford / Old Site (10m)</div>
+
+          <!-- Dynamic Hostel Price Pins Container -->
+          <div id="mapPinsLayer" class="absolute inset-0"></div>
+        </div>
+      </div>
+
+      <!-- Mini Selected Pin Preview Card -->
+      <div id="mapMiniCard" class="hidden absolute left-3 right-3 bottom-3 z-20 bg-white rounded-2xl p-3 shadow-xl border border-slate-200 flex items-center justify-between gap-3">
+        <div class="min-w-0">
+          <div class="flex items-center gap-1.5">
+            <span id="miniWalkBadge" class="px-1.5 py-0.5 rounded bg-teal-50 text-teal-700 border border-teal-200 text-[10px] font-extrabold">3m walk</span>
+            <span id="miniAreaText" class="text-[11px] font-semibold text-slate-500 truncate">Ayensu</span>
+          </div>
+          <h4 id="miniTitle" class="font-extrabold text-sm text-slate-900 truncate mt-0.5">Ayensu Plaza</h4>
+          <div id="miniPrice" class="text-xs font-extrabold text-teal-700">GHS 6,400 / yr</div>
+        </div>
+        <div class="flex items-center gap-1.5 shrink-0">
+          <button id="miniBookBtn" class="px-3 py-2 rounded-xl bg-[#081b2e] text-white text-xs font-bold hover:bg-slate-800">View & Book</button>
+          <button onclick="closeMiniCard()" class="w-7 h-7 rounded-lg bg-slate-100 text-slate-500 font-bold text-xs">✕</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- BOTTOM LIST & FILTERS SHEET -->
+    <section id="listPanel" class="flex-1 flex flex-col bg-white rounded-t-2xl sheet-shadow z-20 overflow-hidden border-t border-slate-200">
+      <!-- Drag Handle & View Mode Switcher -->
+      <div id="dragHandle" class="px-3.5 py-2 border-b border-slate-100 flex items-center justify-between gap-2 cursor-ns-resize bg-slate-50/70 shrink-0">
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-1.5 rounded-full bg-slate-300"></div>
+          <span id="headerCountLabel" class="text-xs font-extrabold text-slate-800">500 Verified Hostels</span>
+          <span class="text-[11px] text-slate-400 font-semibold hidden sm:inline">• Drag ↕</span>
+        </div>
+
+        <div class="inline-flex rounded-lg bg-slate-200/80 p-0.5 text-[11px] font-bold">
+          <button onclick="setViewMode('map')" id="btnViewMap" class="px-2.5 py-1 rounded-md text-slate-600 transition">Map</button>
+          <button onclick="setViewMode('split')" id="btnViewSplit" class="px-2.5 py-1 rounded-md bg-white text-slate-900 shadow-sm transition">Split</button>
+          <button onclick="setViewMode('list')" id="btnViewList" class="px-2.5 py-1 rounded-md text-slate-600 transition">List</button>
+        </div>
+      </div>
+
+      <!-- Trust Bar + Dropdown Filters -->
+      <div class="px-3.5 py-2 border-b border-slate-100 bg-white shrink-0">
+        <div class="flex items-center gap-2 text-[11px] font-semibold text-slate-500 mb-2 overflow-x-auto no-scrollbar whitespace-nowrap">
+          <span class="inline-flex items-center gap-1 text-teal-700 font-bold"><span class="w-2 h-2 rounded-full bg-teal-500"></span> <span id="subCountLabel">500</span> Verified Hostels</span>
+          <span>•</span>
+          <span>0 Agent Fees</span>
+          <span>•</span>
+          <span>All ≤ 10 mins walk</span>
+        </div>
+
+        <div class="grid grid-cols-4 gap-1.5">
+          <select id="filterArea" onchange="syncAreaFromSelect()" class="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-[11px] font-bold text-slate-700 focus:outline-none focus:border-teal-500">
+            <option value="All">All Areas</option>
+            <option value="Ayensu">Ayensu (3-5m)</option>
+            <option value="Kwaprow">Kwaprow (3m)</option>
+            <option value="Amamoma">Amamoma (5m)</option>
+            <option value="Science">Science (5m)</option>
+            <option value="Sch Bus Road">Sch Bus Rd (7m)</option>
+            <option value="Old Site">Old Site (10m)</option>
+          </select>
+
+          <select id="filterPrice" onchange="applyFilters()" class="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-[11px] font-bold text-slate-700 focus:outline-none focus:border-teal-500">
+            <option value="All">Any Price</option>
+            <option value="under4500">≤ GHS 4,500</option>
+            <option value="4500to6000">4,500 – 6,000</option>
+            <option value="above6000">Above 6,000</option>
+          </select>
+
+          <select id="filterRoom" onchange="applyFilters()" class="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-[11px] font-bold text-slate-700 focus:outline-none focus:border-teal-500">
+            <option value="All">All Rooms</option>
+            <option value="1-in-a-room">1-in-a-room</option>
+            <option value="2-in-a-room">2-in-a-room</option>
+            <option value="3-in-a-room">3-in-a-room</option>
+            <option value="4-in-a-room">4-in-a-room</option>
+          </select>
+
+          <select id="filterSort" onchange="applyFilters()" class="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-[11px] font-bold text-slate-700 focus:outline-none focus:border-teal-500">
+            <option value="closest">Closest Walk</option>
+            <option value="popular">Most Popular</option>
+            <option value="priceAsc">Lowest Price</option>
+            <option value="rating">Top Rated</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- SCROLLABLE HOSTEL CARDS FEED -->
+      <div id="hostelFeed" class="flex-1 overflow-y-auto px-3.5 py-3 space-y-3 bg-slate-50/60"></div>
+    </section>
+  </main>
+
+  <!-- HOSTEL DETAIL & INSTANT BOOKING MODAL -->
+  <div id="bookingModal" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+      <div id="modalHero" class="p-5 text-white bg-gradient-to-br from-[#081b2e] via-slate-900 to-teal-900 relative shrink-0">
+        <button onclick="closeBookingModal()" class="absolute right-4 top-4 w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center text-white font-bold">✕</button>
+        <div class="flex items-center gap-2 mb-1.5">
+          <span id="modalWalkPill" class="px-2.5 py-0.5 rounded-full bg-teal-400 text-slate-950 text-xs font-extrabold">3m walk</span>
+          <span id="modalAreaPill" class="px-2.5 py-0.5 rounded-full bg-white/15 text-white text-xs font-semibold">Ayensu</span>
+          <span id="modalRatingPill" class="px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 text-xs font-bold">★ 4.9</span>
+        </div>
+        <h2 id="modalTitle" class="text-xl font-extrabold tracking-tight">Ayensu Plaza</h2>
+        <p id="modalLandmark" class="text-xs text-slate-300 mt-0.5">Near UCC Main Gate • Verified Direct Landlord Listing</p>
+      </div>
+
+      <div class="p-5 overflow-y-auto space-y-4">
+        <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-200">
+          <div>
+            <div class="text-[11px] font-semibold text-slate-500">Academic Year Fee (0 Agent Fees)</div>
+            <div id="modalPrice" class="text-xl font-black text-slate-900">GHS 6,400 <span class="text-xs font-semibold text-slate-500">/ yr</span></div>
+          </div>
+          <div class="text-right">
+            <div class="text-[11px] font-semibold text-slate-500">Availability</div>
+            <div id="modalBeds" class="text-xs font-extrabold text-emerald-600">6 beds left</div>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-2">Included Facilities</h4>
+          <div id="modalAmenities" class="flex flex-wrap gap-1.5"></div>
+        </div>
+
+        <form id="bookingForm" onsubmit="submitBooking(event)" class="space-y-3 pt-2 border-t border-slate-100">
+          <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-700">Reserve Room Directly (No Agent Fee)</h4>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-600 mb-1">Student Full Name</label>
+              <input id="studentName" type="text" required placeholder="e.g. Kwabena Boatey" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:border-teal-500" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-600 mb-1">Phone / WhatsApp</label>
+              <input id="studentPhone" type="tel" required placeholder="e.g. 024 000 0000" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:border-teal-500" />
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-600 mb-1">Level</label>
+              <select id="studentLevel" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold bg-white">
+                <option>Level 100</option>
+                <option>Level 200</option>
+                <option selected>Level 300</option>
+                <option>Level 400</option>
+                <option>Postgraduate</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-600 mb-1">Room Preference</label>
+              <select id="modalRoomSelect" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold bg-white">
+                <option>1-in-a-room</option>
+                <option>2-in-a-room</option>
+                <option>3-in-a-room</option>
+                <option>4-in-a-room</option>
+              </select>
+            </div>
+          </div>
+          <button type="submit" class="w-full py-3 rounded-xl bg-teal-600 hover:bg-teal-500 active:scale-[0.99] text-white font-extrabold text-sm shadow-lg transition">
+            Confirm Instant Reservation • GHS 0 Agent Fee
+          </button>
+        </form>
+
+        <div id="bookingSuccess" class="hidden p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-center space-y-1.5">
+          <div class="text-emerald-700 font-black text-base">Reservation Confirmed!</div>
+          <p id="bookingSuccessText" class="text-xs text-emerald-800 font-medium"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SAVED SHORTLIST DRAWER -->
+  <div id="savedDrawer" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex justify-end">
+    <div class="bg-white w-full max-w-md h-full flex flex-col shadow-2xl">
+      <div class="p-4 bg-[#081b2e] text-white flex items-center justify-between">
+        <div>
+          <h3 class="font-extrabold text-base">Saved Hostels</h3>
+          <p class="text-[11px] text-slate-300">Compare your shortlisted UCC hostels</p>
+        </div>
+        <button onclick="closeSavedDrawer()" class="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center font-bold">✕</button>
+      </div>
+      <div id="savedListContainer" class="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50"></div>
+    </div>
+  </div>
+
+  <script>
+    // Exact Campus Zone Coordinates & Verified Walking Times (All <= 10 mins)
+    const AREA_CONFIG = {
+      "Ayensu": {
+        countTarget: 130,
+        walkOptions: [3, 5], // 3 mins or 5 mins depending on proximity to UCC Gate
+        centerX: 165,
+        centerY: 365,
+        spreadX: 115,
+        spreadY: 75,
+        landmarks: ["UCC Main Gate", "Ayensu Shuttle Stop", "West Gate", "Ayensu Junction"]
+      },
+      "Kwaprow": {
+        countTarget: 85,
+        walkOptions: [3], // Strictly 3 mins walk
+        centerX: 625,
+        centerY: 165,
+        spreadX: 85,
+        spreadY: 65,
+        landmarks: ["New Site Gate", "Kwaprow Junction", "Science Complex", "Calc Building"]
+      },
+      "Amamoma": {
+        countTarget: 110,
+        walkOptions: [5], // Strictly 5 mins walk
+        centerX: 145,
+        centerY: 145,
+        spreadX: 105,
+        spreadY: 65,
+        landmarks: ["Sam Jonah Library", "Amamoma Bridge", "New Site Shuttle", "Lecture Theatre"]
+      },
+      "Science": {
+        countTarget: 65,
+        walkOptions: [5], // Strictly 5 mins walk
+        centerX: 465,
+        centerY: 142,
+        spreadX: 85,
+        spreadY: 45,
+        landmarks: ["Science Complex", "Sam Jonah Library", "SLT Lecture Hall", "Valco Hall"]
+      },
+      "Sch Bus Road": {
+        countTarget: 55,
+        walkOptions: [7], // Strictly 7 mins walk
+        centerX: 405,
+        centerY: 222,
+        spreadX: 70,
+        spreadY: 35,
+        landmarks: ["Sch Bus Road", "UCC Main Gate", "Shuttle Terminal", "Science Junction"]
+      },
+      "Old Site": {
+        countTarget: 55,
+        walkOptions: [10], // Strictly 10 mins walk
+        centerX: 565,
+        centerY: 405,
+        spreadX: 105,
+        spreadY: 60,
+        landmarks: ["Casford Hall", "Oguaa Hall", "Adehye Hall", "Old Site Shuttle"]
+      }
+    };
+
+    // Flagship Real & Popular UCC Hostels with Exact Zone Walk Times
+    const FLAGSHIP_HOSTELS = [
+      { name: "Ayensu Plaza", area: "Ayensu", walkMins: 3, roomType: "2-in-a-room", price: 6400, rating: 4.9, popular: true, amenities: ["Wi-Fi", "Water", "Security", "Standby Gen", "Study Room"] },
+      { name: "Global Hostel", area: "Ayensu", walkMins: 3, roomType: "2-in-a-room", price: 6200, rating: 4.8, popular: true, amenities: ["Wi-Fi", "Water", "Security", "AC Option", "Balcony"] },
+      { name: "Aseda Hostel", area: "Ayensu", walkMins: 5, roomType: "2-in-a-room", price: 5800, rating: 4.8, popular: true, amenities: ["Wi-Fi", "Water", "Security", "Kitchenette"] },
+      { name: "Oye Inn Hostel", area: "Ayensu", walkMins: 5, roomType: "1-in-a-room", price: 7500, rating: 4.7, popular: true, amenities: ["Wi-Fi", "Water", "Security", "En-suite"] },
+      { name: "Kwaprow Executive Suites", area: "Kwaprow", walkMins: 3, roomType: "1-in-a-room", price: 7800, rating: 4.9, popular: true, amenities: ["Wi-Fi", "Water", "Security", "Standby Gen", "AC"] },
+      { name: "New Site Royal Lodge", area: "Kwaprow", walkMins: 3, roomType: "2-in-a-room", price: 5900, rating: 4.8, popular: true, amenities: ["Wi-Fi", "Water", "Security", "CCTV"] },
+      { name: "Casa De Ropa Hostel", area: "Amamoma", walkMins: 5, roomType: "2-in-a-room", price: 6300, rating: 4.9, popular: true, amenities: ["Wi-Fi", "Water", "Security", "Standby Gen", "Study Lounge"] },
+      { name: "Amamoma Hills Annex", area: "Amamoma", walkMins: 5, roomType: "3-in-a-room", price: 4600, rating: 4.6, popular: true, amenities: ["Wi-Fi", "Water", "Security"] },
+      { name: "Science Gate Lodge", area: "Science", walkMins: 5, roomType: "2-in-a-room", price: 6500, rating: 4.9, popular: true, amenities: ["Wi-Fi", "Water", "Security", "Standby Gen", "24/7 Light"] },
+      { name: "Valco Trust Annex", area: "Science", walkMins: 5, roomType: "2-in-a-room", price: 6100, rating: 4.8, popular: true, amenities: ["Wi-Fi", "Water", "Security", "Study Room"] },
+      { name: "Shuttle View Hostel", area: "Sch Bus Road", walkMins: 7, roomType: "2-in-a-room", price: 5500, rating: 4.7, popular: true, amenities: ["Wi-Fi", "Water", "Security", "Shuttle Access"] },
+      { name: "Main Gate Scholars Court", area: "Sch Bus Road", walkMins: 7, roomType: "3-in-a-room", price: 4500, rating: 4.6, popular: false, amenities: ["Wi-Fi", "Water", "Security"] },
+      { name: "Casford View Lodge", area: "Old Site", walkMins: 10, roomType: "2-in-a-room", price: 5200, rating: 4.8, popular: true, amenities: ["Wi-Fi", "Water", "Security", "Study Room"] },
+      { name: "Oguaa Heritage Suites", area: "Old Site", walkMins: 10, roomType: "3-in-a-room", price: 4300, rating: 4.6, popular: false, amenities: ["Wi-Fi", "Water", "Security", "Laundry Area"] }
+    ];
+
+    // Deterministic Generator for Exactly 500 Verified Hostels
+    function build500Hostels() {
+      const prefixes = [
+        "Royal", "Golden", "Emerald", "Victory", "Grace", "Wisdom", "Prestige", "Beacon",
+        "Trinity", "Blessed", "Crown", "Excel", "Campus", "Scholars", "Premier", "Peace",
+        "Glory", "Star", "Diamond", "Heritage", "Unity", "Liberty", "Alpha", "Omega",
+        "Fountain", "Pinnacle", "Summit", "Haven", "Serene", "Harmony", "Comfort", "Elite"
+      ];
+      const suffixes = [
+        "Hostel", "Lodge", "Suites", "Court", "Annex", "Plaza", "Villa", "Residency",
+        "Hall", "Chambers", "Apartments", "Manor", "Terrace", "Heights", "Gardens", "House"
+      ];
+      const roomTypes = ["1-in-a-room", "2-in-a-room", "3-in-a-room", "4-in-a-room"];
+      const extraAmenities = ["Standby Gen", "Study Room", "CCTV", "Kitchenette", "Balcony", "Laundry Area", "Borehole Backup"];
+      const gradients = [
+        "from-[#081b2e] via-[#0f3454] to-[#0d9488]",
+        "from-[#0c243c] via-[#134e4a] to-[#14b8a6]",
+        "from-[#102a43] via-[#1d4ed8] to-[#0284c7]",
+        "from-[#1e1b4b] via-[#312e81] to-[#0f766e]",
+        "from-[#0f172a] via-[#1e293b] to-[#0d9488]"
+      ];
+
+      let seed = 20260517;
+      function rand() {
+        seed = (seed * 1664525 + 1013904223) % 4294967296;
+        return seed / 4294967296;
+      }
+
+      const list = [];
+      const areaCounts = {
+        "Ayensu": 0,
+        "Kwaprow": 0,
+        "Amamoma": 0,
+        "Science": 0,
+        "Sch Bus Road": 0,
+        "Old Site": 0
+      };
+
+      // Add Flagships First
+      FLAGSHIP_HOSTELS.forEach((item, idx) => {
+        const cfg = AREA_CONFIG[item.area];
+        const angle = (idx * 2.39996);
+        const radius = 0.25 + (idx % 4) * 0.16;
+        const x = Math.round(cfg.centerX + Math.cos(angle) * cfg.spreadX * radius);
+        const y = Math.round(cfg.centerY + Math.sin(angle) * cfg.spreadY * radius);
+        const initials = item.name.split(" ").slice(0, 2).map(w => w[0]).join("").toUpperCase();
+
+        list.push({
+          id: idx + 1,
+          name: item.name,
+          initials,
+          area: item.area,
+          walkMins: item.walkMins,
+          roomType: item.roomType,
+          price: item.price,
+          rating: item.rating,
+          popular: item.popular,
+          amenities: item.amenities,
+          landmark: cfg.landmarks[idx % cfg.landmarks.length],
+          bedsLeft: 2 + (idx % 7),
+          gradient: gradients[idx % gradients.length],
+          x,
+          y
+        });
+        areaCounts[item.area]++;
+      });
+
+      // Fill Remaining Hostels up to Exact Area Targets (Total = 500)
+      const areaNames = Object.keys(AREA_CONFIG);
+      let nextId = list.length + 1;
+
+      areaNames.forEach(area => {
+        const cfg = AREA_CONFIG[area];
+        while (areaCounts[area] < cfg.countTarget) {
+          const p = prefixes[Math.floor(rand() * prefixes.length)];
+          const s = suffixes[Math.floor(rand() * suffixes.length)];
+          const blockNum = Math.floor(rand() * 28) + 1;
+          const areaTag = area === "Sch Bus Road" ? "Bus Rd" : area;
+          const name = `${p} ${areaTag} ${s} ${blockNum}`;
+          const initials = (p[0] + s[0]).toUpperCase();
+
+          // Enforce exact walking time rule per area
+          const walkMins = cfg.walkOptions[Math.floor(rand() * cfg.walkOptions.length)];
+
+          const roomRoll = rand();
+          let roomType = "2-in-a-room";
+          let basePrice = 5600;
+          if (roomRoll < 0.16) {
+            roomType = "1-in-a-room";
+            basePrice = 7200;
+          } else if (roomRoll < 0.62) {
+            roomType = "2-in-a-room";
+            basePrice = 5600;
+          } else if (roomRoll < 0.86) {
+            roomType = "3-in-a-room";
+            basePrice = 4400;
+          } else {
+            roomType = "4-in-a-room";
+            basePrice = 3600;
+          }
+
+          const price = Math.round((basePrice + (rand() * 1100 - 450)) / 100) * 100;
+          const rating = Number((4.5 + rand() * 0.49).toFixed(1));
+          const popular = rand() > 0.78;
+
+          const ams = ["Wi-Fi", "Water", "Security"];
+          const extra1 = extraAmenities[Math.floor(rand() * extraAmenities.length)];
+          const extra2 = extraAmenities[Math.floor(rand() * extraAmenities.length)];
+          if (!ams.includes(extra1)) ams.push(extra1);
+          if (!ams.includes(extra2)) ams.push(extra2);
+
+          const angle = rand() * Math.PI * 2;
+          const dist = Math.sqrt(rand());
+          const x = Math.max(24, Math.min(736, Math.round(cfg.centerX + Math.cos(angle) * cfg.spreadX * dist)));
+          const y = Math.max(24, Math.min(516, Math.round(cfg.centerY + Math.sin(angle) * cfg.spreadY * dist)));
+
+          list.push({
+            id: nextId++,
+            name,
+            initials,
+            area,
+            walkMins,
+            roomType,
+            price,
+            rating,
+            popular,
+            amenities: ams,
+            landmark: cfg.landmarks[Math.floor(rand() * cfg.landmarks.length)],
+            bedsLeft: Math.floor(rand() * 9) + 1,
+            gradient: gradients[nextId % gradients.length],
+            x,
+            y
+          });
+          areaCounts[area]++;
+        }
+      });
+
+      return list;
+    }
+
+    const ALL_HOSTELS = build500Hostels();
+    let filteredHostels = [...ALL_HOSTELS];
+    let selectedArea = "All";
+    let savedIds = new Set([1, 7]);
+    let activeModalHostel = null;
+
+    // Map Pan & Zoom State
+    let mapScale = 1;
+    let mapOffsetX = 0;
+    let mapOffsetY = 0;
+    let isPanning = false;
+    let panStartX = 0;
+    let panStartY = 0;
+
+    function initApp() {
+      renderAreaChips();
+      updateSavedBadge();
+      applyFilters();
+      setupMapPanning();
+      setupSheetDrag();
+    }
+
+    function renderAreaChips() {
+      const container = document.getElementById("areaChips");
+      const areas = ["All", "Ayensu", "Kwaprow", "Amamoma", "Science", "Sch Bus Road", "Old Site"];
+      container.innerHTML = areas.map(area => {
+        const count = area === "All"
+          ? ALL_HOSTELS.length
+          : ALL_HOSTELS.filter(h => h.area === area).length;
+        const active = selectedArea === area;
+        const walkHint = area === "All" ? "" : ` • ${AREA_CONFIG[area].walkOptions.join("/")}m`;
+        return `
+          <button
+            onclick="selectArea('${area}')"
+            class="px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition shrink-0 ${
+              active
+                ? "bg-white text-slate-950 shadow-sm"
+                : "bg-white/10 text-slate-200 hover:bg-white/20"
+            }"
+          >
+            ${area === "All" ? `All Areas (${count})` : `${area} (${count})${walkHint}`}
+          </button>
+        `;
+      }).join("");
+    }
+
+    function selectArea(area) {
+      selectedArea = area;
+      document.getElementById("filterArea").value = area;
+      renderAreaChips();
+      applyFilters();
+
+      if (area !== "All" && AREA_CONFIG[area]) {
+        const cfg = AREA_CONFIG[area];
+        mapOffsetX = (380 - cfg.centerX) * 0.55;
+        mapOffsetY = (270 - cfg.centerY) * 0.55;
+        updateMapTransform();
+      } else {
+        recenterMap();
+      }
+    }
+
+    function syncAreaFromSelect() {
+      selectArea(document.getElementById("filterArea").value);
+    }
+
+    function clearSearch() {
+      document.getElementById("searchInput").value = "";
+      applyFilters();
+    }
+
+    function resetFilters() {
+      selectedArea = "All";
+      document.getElementById("searchInput").value = "";
+      document.getElementById("filterArea").value = "All";
+      document.getElementById("filterPrice").value = "All";
+      document.getElementById("filterRoom").value = "All";
+      document.getElementById("filterSort").value = "closest";
+      renderAreaChips();
+      recenterMap();
+      applyFilters();
+    }
+
+    function applyFilters() {
+      const q = document.getElementById("searchInput").value.trim().toLowerCase();
+      document.getElementById("clearSearchBtn").classList.toggle("hidden", q.length === 0);
+
+      const priceFilter = document.getElementById("filterPrice").value;
+      const roomFilter = document.getElementById("filterRoom").value;
+      const sortBy = document.getElementById("filterSort").value;
+
+      filteredHostels = ALL_HOSTELS.filter(h => {
+        if (selectedArea !== "All" && h.area !== selectedArea) return false;
+        if (roomFilter !== "All" && h.roomType !== roomFilter) return false;
+        if (priceFilter === "under4500" && h.price > 4500) return false;
+        if (priceFilter === "4500to6000" && (h.price < 4500 || h.price > 6000)) return false;
+        if (priceFilter === "above6000" && h.price <= 6000) return false;
+
+        if (q) {
+          const hay = `${h.name} ${h.area} ${h.landmark} ${h.roomType} ${h.amenities.join(" ")}`.toLowerCase();
+          if (!hay.includes(q)) return false;
+        }
+        return true;
+      });
+
+      if (sortBy === "closest") {
+        filteredHostels.sort((a, b) => a.walkMins - b.walkMins || (b.popular - a.popular) || b.rating - a.rating);
+      } else if (sortBy === "popular") {
+        filteredHostels.sort((a, b) => (b.popular - a.popular) || b.rating - a.rating || a.walkMins - b.walkMins);
+      } else if (sortBy === "priceAsc") {
+        filteredHostels.sort((a, b) => a.price - b.price);
+      } else if (sortBy === "rating") {
+        filteredHostels.sort((a, b) => b.rating - a.rating || a.walkMins - b.walkMins);
+      }
+
+      document.getElementById("headerCountLabel").textContent = `${filteredHostels.length} Verified Hostels`;
+      document.getElementById("subCountLabel").textContent = filteredHostels.length;
+
+      renderHostelList();
+      renderMapPins();
+    }
+
+    function renderHostelList() {
+      const feed = document.getElementById("hostelFeed");
+      if (filteredHostels.length === 0) {
+        feed.innerHTML = `
+          <div class="text-center py-10 px-4 bg-white rounded-2xl border border-slate-200">
+            <div class="text-sm font-extrabold text-slate-800">No matching hostels found</div>
+            <p class="text-xs text-slate-500 mt-1">Try clearing your search or switching back to All Areas.</p>
+            <button onclick="resetFilters()" class="mt-3 px-4 py-2 rounded-xl bg-teal-600 text-white text-xs font-bold">Reset All Filters</button>
+          </div>
+        `;
+        return;
+      }
+
+      let html = filteredHostels.map(h => {
+        const isSaved = savedIds.has(h.id);
+        const visibleAms = h.amenities.slice(0, 3);
+        const extraCount = Math.max(0, h.amenities.length - 3);
+
+        return `
+          <article class="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden flex items-stretch hover:border-teal-400/70 transition">
+            <div onclick="openBookingModal(${h.id})" class="w-24 sm:w-28 bg-gradient-to-br ${h.gradient} text-white p-2.5 flex flex-col justify-between shrink-0 cursor-pointer">
+              <div>
+                ${h.popular ? `<span class="inline-block px-1.5 py-0.5 rounded bg-amber-400 text-slate-950 text-[9.5px] font-black">★ Popular</span>` : `<span class="inline-block px-1.5 py-0.5 rounded bg-white/15 text-teal-200 text-[9.5px] font-bold">Verified</span>`}
+              </div>
+              <div class="text-xl font-black tracking-tight my-1">${h.initials}</div>
+              <div class="text-[10.5px] font-extrabold text-teal-200">${h.walkMins}m walk</div>
+            </div>
+
+            <div class="flex-1 p-3 min-w-0 flex flex-col justify-between">
+              <div>
+                <div class="flex items-start justify-between gap-2">
+                  <div onclick="openBookingModal(${h.id})" class="min-w-0 cursor-pointer">
+                    <h3 class="font-extrabold text-sm sm:text-base text-slate-900 truncate">${h.name}</h3>
+                    <p class="text-xs font-semibold text-sky-700 truncate">${h.area} • ${h.roomType}</p>
+                  </div>
+
+                  <div class="flex items-center gap-1.5 shrink-0">
+                    <span class="px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-[11px] font-extrabold">★ ${h.rating}</span>
+                    <button onclick="toggleSave(${h.id})" aria-label="Save hostel" class="w-7 h-7 rounded-full border border-slate-200 flex items-center justify-center transition ${isSaved ? "bg-rose-50 border-rose-200 text-rose-500" : "bg-white text-slate-400 hover:text-rose-500"}">
+                      ${isSaved ? "♥" : "♡"}
+                    </button>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-1.5 mt-2 flex-wrap">
+                  ${visibleAms.map(a => `<span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 text-[10.5px] font-semibold">${a}</span>`).join("")}
+                  ${extraCount > 0 ? `<span class="px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-500 text-[10.5px] font-bold">+${extraCount}</span>` : ""}
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between gap-2 mt-3 pt-2 border-t border-slate-100">
+                <div>
+                  <span class="text-sm sm:text-base font-black text-slate-900">GHS ${h.price.toLocaleString()}</span>
+                  <span class="text-[11px] font-semibold text-slate-400">/yr</span>
+                </div>
+                <button onclick="openBookingModal(${h.id})" class="px-3.5 py-1.5 rounded-xl bg-[#081b2e] hover:bg-slate-800 active:scale-95 text-white text-xs font-extrabold transition">
+                  View & Book
+                </button>
+              </div>
+            </div>
+          </article>
+        `;
+      }).join("");
+
+      feed.innerHTML = html;
+    }
+
+    function renderMapPins() {
+      const layer = document.getElementById("mapPinsLayer");
+      // Render up to 95 well-spaced pins from the filtered set so all 6 zones stay crisp on mobile
+      const pinsToShow = filteredHostels.slice(0, 95);
+      layer.innerHTML = pinsToShow.map(h => {
+        const priceShort = (h.price / 1000).toFixed(1) + "k";
+        return `
+          <button
+            onclick="selectMapPin(${h.id}, event)"
+            style="left: ${h.x}px; top: ${h.y}px;"
+            class="absolute -translate-x-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded-full bg-white hover:bg-teal-600 hover:text-white text-slate-900 border border-slate-300 shadow-sm text-[9.5px] font-extrabold transition transform hover:scale-110 hover:z-30"
+          >
+            ${priceShort}
+          </button>
+        `;
+      }).join("");
+    }
+
+    function selectMapPin(id, e) {
+      if (e) e.stopPropagation();
+      const h = ALL_HOSTELS.find(item => item.id === id);
+      if (!h) return;
+
+      document.getElementById("miniWalkBadge").textContent = `${h.walkMins}m walk`;
+      document.getElementById("miniAreaText").textContent = `${h.area} • ${h.roomType}`;
+      document.getElementById("miniTitle").textContent = h.name;
+      document.getElementById("miniPrice").textContent = `GHS ${h.price.toLocaleString()} / yr`;
+      document.getElementById("miniBookBtn").onclick = () => openBookingModal(h.id);
+      document.getElementById("mapMiniCard").classList.remove("hidden");
+    }
+
+    function closeMiniCard() {
+      document.getElementById("mapMiniCard").classList.add("hidden");
+    }
+
+    function toggleSave(id) {
+      if (savedIds.has(id)) {
+        savedIds.delete(id);
+      } else {
+        savedIds.add(id);
+      }
+      updateSavedBadge();
+      renderHostelList();
+      if (!document.getElementById("savedDrawer").classList.contains("hidden")) {
+        renderSavedDrawer();
+      }
+    }
+
+    function updateSavedBadge() {
+      document.getElementById("savedBadge").textContent = savedIds.size;
+    }
+
+    function openSavedDrawer() {
+      renderSavedDrawer();
+      document.getElementById("savedDrawer").classList.remove("hidden");
+    }
+
+    function closeSavedDrawer() {
+      document.getElementById("savedDrawer").classList.add("hidden");
+    }
+
+    function renderSavedDrawer() {
+      const container = document.getElementById("savedListContainer");
+      const items = ALL_HOSTELS.filter(h => savedIds.has(h.id));
+      if (items.length === 0) {
+        container.innerHTML = `<div class="text-center py-12 text-xs font-semibold text-slate-500">No saved hostels yet. Tap the heart icon on any hostel to shortlist it.</div>`;
+        return;
+      }
+      container.innerHTML = items.map(h => `
+        <div class="bg-white p-3.5 rounded-2xl border border-slate-200 flex items-center justify-between gap-3">
+          <div class="min-w-0">
+            <span class="text-[10px] font-extrabold text-teal-700 bg-teal-50 px-2 py-0.5 rounded">${h.area} • ${h.walkMins}m walk</span>
+            <h4 class="font-extrabold text-sm text-slate-900 truncate mt-1">${h.name}</h4>
+            <div class="text-xs font-bold text-slate-600">GHS ${h.price.toLocaleString()}/yr • ${h.roomType}</div>
+          </div>
+          <div class="flex items-center gap-1.5 shrink-0">
+            <button onclick="closeSavedDrawer(); openBookingModal(${h.id})" class="px-3 py-1.5 rounded-xl bg-[#081b2e] text-white text-xs font-bold">Book</button>
+            <button onclick="toggleSave(${h.id})" class="px-2 py-1.5 rounded-xl bg-rose-50 text-rose-600 text-xs font-bold">Remove</button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function openBookingModal(id) {
+      const h = ALL_HOSTELS.find(item => item.id === id);
+      if (!h) return;
+      activeModalHostel = h;
+
+      document.getElementById("modalWalkPill").textContent = `${h.walkMins}m walk`;
+      document.getElementById("modalAreaPill").textContent = h.area;
+      document.getElementById("modalRatingPill").textContent = `★ ${h.rating}`;
+      document.getElementById("modalTitle").textContent = h.name;
+      document.getElementById("modalLandmark").textContent = `Near ${h.landmark} • ${h.walkMins} mins walk to lecture halls`;
+      document.getElementById("modalPrice").innerHTML = `GHS ${h.price.toLocaleString()} <span class="text-xs font-semibold text-slate-500">/ yr</span>`;
+      document.getElementById("modalBeds").textContent = `${h.bedsLeft} beds left`;
+      document.getElementById("modalRoomSelect").value = h.roomType;
+
+      document.getElementById("modalAmenities").innerHTML = h.amenities.map(a =>
+        `<span class="px-2.5 py-1 rounded-lg bg-teal-50 text-teal-800 border border-teal-200 text-xs font-bold">✓ ${a}</span>`
+      ).join("");
+
+      document.getElementById("bookingForm").classList.remove("hidden");
+      document.getElementById("bookingSuccess").classList.add("hidden");
+      document.getElementById("bookingModal").classList.remove("hidden");
+    }
+
+    function closeBookingModal() {
+      document.getElementById("bookingModal").classList.add("hidden");
+    }
+
+    function submitBooking(e) {
+      e.preventDefault();
+      if (!activeModalHostel) return;
+      const name = document.getElementById("studentName").value.trim();
+      const room = document.getElementById("modalRoomSelect").value;
+      document.getElementById("bookingForm").classList.add("hidden");
+      document.getElementById("bookingSuccessText").textContent =
+        `${name}, your ${room} space at ${activeModalHostel.name} (${activeModalHostel.area}, ${activeModalHostel.walkMins}m walk) is reserved with GHS 0 agent fee.`;
+      document.getElementById("bookingSuccess").classList.remove("hidden");
+    }
+
+    // View Mode & Draggable Split Sheet
+    function setViewMode(mode) {
+      const mapPanel = document.getElementById("mapPanel");
+      const btnMap = document.getElementById("btnViewMap");
+      const btnSplit = document.getElementById("btnViewSplit");
+      const btnList = document.getElementById("btnViewList");
+
+      [btnMap, btnSplit, btnList].forEach(b => {
+        b.classList.remove("bg-white", "text-slate-900", "shadow-sm");
+        b.classList.add("text-slate-600");
+      });
+
+      if (mode === "map") {
+        mapPanel.style.height = "76%";
+        btnMap.classList.add("bg-white", "text-slate-900", "shadow-sm");
+      } else if (mode === "list") {
+        mapPanel.style.height = "0%";
+        btnList.classList.add("bg-white", "text-slate-900", "shadow-sm");
+      } else {
+        mapPanel.style.height = "44%";
+        btnSplit.classList.add("bg-white", "text-slate-900", "shadow-sm");
+      }
+    }
+
+    function setupSheetDrag() {
+      const handle = document.getElementById("dragHandle");
+      const workspace = document.getElementById("workspace");
+      const mapPanel = document.getElementById("mapPanel");
+      let dragging = false;
+
+      const onMove = (clientY) => {
+        if (!dragging) return;
+        const rect = workspace.getBoundingClientRect();
+        const pct = Math.max(0, Math.min(82, ((clientY - rect.top) / rect.height) * 100));
+        mapPanel.style.height = `${pct}%`;
+      };
+
+      handle.addEventListener("mousedown", () => dragging = true);
+      window.addEventListener("mousemove", e => onMove(e.clientY));
+      window.addEventListener("mouseup", () => dragging = false);
+
+      handle.addEventListener("touchstart", () => dragging = true, { passive: true });
+      window.addEventListener("touchmove", e => {
+        if (e.touches[0]) onMove(e.touches[0].clientY);
+      }, { passive: true });
+      window.addEventListener("touchend", () => dragging = false);
+    }
+
+    // Interactive Map Panning & Zoom
+    function updateMapTransform() {
+      const canvas = document.getElementById("mapCanvas");
+      canvas.style.transform = `translate(calc(-50% + ${mapOffsetX}px), calc(-50% + ${mapOffsetY}px)) scale(${mapScale})`;
+    }
+
+    function zoomMap(delta) {
+      mapScale = Math.max(0.75, Math.min(2.2, Number((mapScale + delta).toFixed(2))));
+      updateMapTransform();
+    }
+
+    function recenterMap() {
+      mapScale = 1;
+      mapOffsetX = 0;
+      mapOffsetY = 0;
+      updateMapTransform();
+    }
+
+    function setupMapPanning() {
+      const vp = document.getElementById("mapViewport");
+
+      vp.addEventListener("mousedown", e => {
+        if (e.target.tagName === "BUTTON") return;
+        isPanning = true;
+        panStartX = e.clientX - mapOffsetX;
+        panStartY = e.clientY - mapOffsetY;
+      });
+      window.addEventListener("mousemove", e => {
+        if (!isPanning) return;
+        mapOffsetX = Math.max(-240, Math.min(240, e.clientX - panStartX));
+        mapOffsetY = Math.max(-180, Math.min(180, e.clientY - panStartY));
+        updateMapTransform();
+      });
+      window.addEventListener("mouseup", () => isPanning = false);
+
+      vp.addEventListener("touchstart", e => {
+        if (e.target.tagName === "BUTTON" || !e.touches[0]) return;
+        isPanning = true;
+        panStartX = e.touches[0].clientX - mapOffsetX;
+        panStartY = e.touches[0].clientY - mapOffsetY;
+      }, { passive: true });
+      window.addEventListener("touchmove", e => {
+        if (!isPanning || !e.touches[0]) return;
+        mapOffsetX = Math.max(-240, Math.min(240, e.touches[0].clientX - panStartX));
+        mapOffsetY = Math.max(-180, Math.min(180, e.touches[0].clientY - panStartY));
+        updateMapTransform();
+      }, { passive: true });
+      window.addEventListener("touchend", () => isPanning = false);
+    }
+
+    initApp();
+  </script>
+</body>
+</html>
